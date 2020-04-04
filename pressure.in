@@ -1,0 +1,36 @@
+units metal
+boundary p p p
+atom_style atomic
+########################## Units Conversion #####################
+###convert from LAMMPS real units to SI
+variable kB equal 1.3806504e-23 # [J/K] Boltzmann
+variable eV2J equal 1.6022e-19 # energy eV ??? J
+variable A2m equal 1.0e-10 # distance ?????
+variable ps2s equal 1.0e-12 # time ??????
+read_data NVE_relax.d
+pair_style hybrid tersoff lj/cut 8.5
+pair_coeff * * tersoff SiC_Lindsay.tersoff Si Si Si Si Si Si Si Si
+pair_coeff 5 5 lj/cut 0.0104 3.4
+pair_coeff 1 5 lj/cut 0.0134675 4
+pair_coeff 2 5 lj/cut 0.0134675 4
+pair_coeff 3 5 lj/cut 0.0134675 4
+pair_coeff 5 6 lj/cut 0.0134675 4
+pair_coeff 5 7 lj/cut 0.0134675 4
+pair_coeff 5 8 lj/cut 0.0134675 4
+group liquid type 5
+########## Run NVE
+fix 3 all nve
+compute stens liquid stress/atom
+compute p1 liquid reduce sum c_stens[1]
+compute p2 liquid reduce sum c_stens[2]
+compute p3 liquid reduce sum c_stens[3]
+
+variable volliq equal 639267.6
+variable presss equal -(c_p1+c_p2+c_p3)/(3*v_volliq)
+
+dump 1 all atom 50000 nemd.lammpstrj
+thermo_style custom step temp press v_presss
+thermo 100
+run 20000
+
+
